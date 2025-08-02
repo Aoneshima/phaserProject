@@ -12,10 +12,14 @@ class GameScene extends Phaser.Scene {
         //важные циклы игры, загрузка игровых ассеты
             preload(){
                 this.load.image('sky', 'assets/blue-sky.jpg');
-                this.load.image('ground', 'assets/ground.png');
+                this.load.image('Cground', 'assets/common-ground.png');
+                this.load.image('Sground', 'assets/sakura-ground.png');
                 this.load.image('star', 'assets/star.png');
                 this.load.image('bomb', 'assets/bomb.png');
-                this.load.image('hero', 'assets/hero.png');
+                this.load.spritesheet('hero', 'assets/hero.png', {
+                    frameWidth: 70,
+                    frameHeight: 108,
+                });
                 this.load.image('restart', 'assets/restart.png')
             }
             //прописывание и добавление игровых объектов на сцене и дополнительные параметры для них
@@ -27,21 +31,39 @@ class GameScene extends Phaser.Scene {
                 restartButton.on('pointerdown', () => {
                     location.reload();
                 });
-                //создание переменнойЮ значищей объекст с физическими свойствами
+                //создание переменной, значищей объект с физическими свойствами
                 platforms = this.physics.add.staticGroup();
-                platforms.create(250, 850, 'ground').setScale(2).refreshBody();
-                platforms.create(630, 740, 'ground');
-                platforms.create(900, 900, 'ground');
-                platforms.create(1150, 750, 'ground');
-                platforms.create(1400, 600, 'ground');
-                platforms.create(1000, 450, 'ground');
-                platforms.create(600, 350, 'ground');
-                platforms.create(100, 400, 'ground');
+                platforms.create(750, 900, 'Cground').setScale(1.5).refreshBody();
+                platforms.create(200, 730, 'Cground').setScale(0.5).refreshBody();
+                platforms.create(1300, 730, 'Cground').setScale(0.5).refreshBody();
+                platforms.create(50, 600, 'Cground').setScale(0.25).refreshBody();
+                platforms.create(1500, 600, 'Cground').setScale(0.25).refreshBody();
+                platforms.create(400, 450, 'Sground').setScale(0.40).refreshBody();
+                platforms.create(1150, 450, 'Sground').setScale(0.25).refreshBody();
+                platforms.create(1450, 300, 'Sground').setScale(0.25).refreshBody();
+                platforms.create(870, 300, 'Sground').setScale(0.65).refreshBody();
 
                 //создаем персонажа
-                this.player = this.physics.add.sprite(400, 350, 'hero');
-                // this.player.setBounce(0.2);
+                this.player = this.physics.add.sprite(750, 350, 'hero');
+                // this.player.setBounce(0.2); (отскок персонажа)
                 this.player.setCollideWorldBounds(true);
+
+                //анимации для персонажа
+                this.anims.create({
+                    key: 'left',
+                    frames: this.anims.generateFrameNumbers('hero', {start: 0, end: 1}),
+                    frameRate: 5
+                });
+                this.anims.create({
+                    key: 'turn',
+                    frames: [ { key: 'hero', frame: 3 } ],
+                    frameRate: 5
+                });
+                this.anims.create({
+                    key: 'right',
+                    frames: this.anims.generateFrameNumbers('hero', {start: 2, end: 3}),
+                    frameRate: 5
+                });
 
                 // this.player.body.setGravityY(300);
                 this.physics.add.collider(this.player, this.platforms);
@@ -83,10 +105,13 @@ class GameScene extends Phaser.Scene {
                 
                 if(cursors.left.isDown){
                     this.player.setVelocityX(-220);
+                    this.player.anims.play('left', true);
                 }else if(cursors.right.isDown){
                     this.player.setVelocityX(220);
+                    this.player.anims.play('right', true);
                 }else{
                     this.player.setVelocityX(0);
+                    this.player.anims.play('turn', true);
                 }
 
                 if(cursors.up.isDown && this.player.body.touching.down){
@@ -100,6 +125,7 @@ class GameScene extends Phaser.Scene {
                 score += 10;
                 scoreText.setText(`Score: ${score}`)
 
+                //в случае, если звезд осталось 0
                 if(stars.countActive(true) === 0){
                     stars.children.iterate(child => {
                         child.enableBody(true, child.x, 0, true, true)
